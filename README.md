@@ -1,4 +1,9 @@
-# Resilient data exporters
+# Resilient Exporters
+![PyPI](https://img.shields.io/pypi/v/resilient-exporters?logo=pypi&logoColor=white&style=for-the-badge)
+![GitHub Build Status](https://img.shields.io/github/workflow/status/arbfay/resilient-exporters/Python%20package?logo=github&style=for-the-badge)
+![License](https://img.shields.io/github/license/arbfay/resilient-exporters?style=for-the-badge)
+![Python Version](https://img.shields.io/badge/3.5+%20-%2314354C.svg?label=PYTHON&style=for-the-badge&logo=python&logoColor=white)
+
 Resilient-exporters abstracts away common tasks when sending or saving data from an application. It has been designed to send data to different targets and manage common issues for applications running on edge devices such as a Raspberry Pi or Nvidia Jetson Nano:
 - Internet connection interruptions;
 - Highly variable frequency of data transfers;
@@ -14,8 +19,16 @@ Of course, it can break if:
 We have designed it particularly for a Raspberry Pi 3B+ device running a Linux distribution.
 
 ## Installation
+To use the package:
 ```
 pip install resilient-exporters
+```
+### Dev installation
+If you'd like to have a editable, up-to-date version of the files, do:
+```
+git clone https://github.com/arbfay/resilient-exporters.git && \
+pip install -e resilient-exporters/ && \
+pip install -r resilient-exporters/dev_requirements.txt
 ```
 
 ## Usage
@@ -111,11 +124,14 @@ exporter.send(mydata)
 >**NOTE**: it can also be passed to a pool with the same key argument `tranform` at initialisation. When doing so, transform functions of individual exporters will be superseded by the pool's transform function.
 
 ## Additional information
-The `resilient_exporters.Exporter` and `resilient_exporters.ExporterPool` are the core of the package. All the other exporters inherits from one of them.
+The `resilient_exporters.Exporter` is at the core of the package. All the other exporters inherits from it.
 
 `Exporter` manages the export of data to a target, however each target need specific logic to send data. All these subclasses, such as `FileExporter` or `MongoDBExporter`, implement the `Exporter.send` method and manage the needed options. Some exporters might need additional packages to be usable:
 - `pymongo` for `MongoDBExporter`
 - `elasticsearch` for `ElasticSearchExporter`
+
+## Documentation
+More documentation available [here.](https://resilient-exporters.readthedocs.io)
 
 ## Suggestions and contribution
 Please open a GitHub issue for bugs or feature requests.
