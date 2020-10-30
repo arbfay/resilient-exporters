@@ -1,7 +1,6 @@
-import os
 import urllib
 import logging
-from typing import Union, Iterable, Optional, Text
+from typing import Text
 from resilient_exporters.exporters import Exporter, ExportResult
 from resilient_exporters.exceptions import MissingConfigError, \
                                            InvalidConfigError, \
@@ -108,9 +107,9 @@ class MongoDBExporter(Exporter):
         return self.__client
 
     def send(self,
-              data: dict,
-              db: Text = None,
-              collection: Text = None) -> ExportResult:
+             data: dict,
+             db: Text = None,
+             collection: Text = None) -> ExportResult:
         """Inserts data into a collection. Reuses default database and
         collection names, if provided at initialisation.
 
