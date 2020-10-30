@@ -1,6 +1,5 @@
-import os
 import logging
-from typing import Optional, Text, List, Iterable
+from typing import Optional, Text, Iterable
 from resilient_exporters.exporters import Exporter, ExportResult
 from resilient_exporters.exceptions import MissingModuleError, \
                                            MissingConfigError, \

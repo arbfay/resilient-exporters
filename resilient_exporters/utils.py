@@ -1,13 +1,10 @@
-import os
-import shutil
-import json
-import requests
 import shelve
 import time
 import queue
 import random
 import string
 from typing import Optional, Text
+import requests
 
 def generate_rand_name() -> str:
     """Generate a random name of the form "export_XXXXXX" where XXXXXX are
@@ -32,7 +29,7 @@ def is_able_to_connect(url: Optional[Text] = None) -> bool:
     if url is None:
         url = "https://www.google.com"
     try:
-    	request = requests.get(url, timeout=.5)
+    	_ = requests.get(url, timeout=.5)
     	return True
     except (requests.ConnectionError, requests.Timeout):
     	return False
@@ -44,8 +41,8 @@ class _DataStore:
     def __new__(cls, *args, **kwargs):
         if "shelf_filename" in kwargs.keys():
             if kwargs["shelf_filename"] in cls.__used_filenames:
-                raise ValueError(
-                        f"File {kwargs['db_filename']} is already being used.")
+                raise ValueError(f"File {kwargs['db_filename']} is already \
+                                 being used.")
         return super(_DataStore, cls).__new__(cls)
 
     def __init__(self,
@@ -77,11 +74,11 @@ class _DataStore:
     @use_memory.setter
     def use_memory(self, new_val: bool) -> bool:
         if self.__use_memory and new_val == False:
-            self.export_queue_to_file()
+            self.export_queue_to_shelf()
             self.__use_memory = new_val
             self.__queue = None
         elif self.__use_memory == False and new_val:
-            self.__queue = self.import_queue_from_file()
+            self.__queue = self.import_queue_from_shelf()
             self.__use_memory = new_val
             self.__shelf.close()
             self.__shelf = None
@@ -89,15 +86,16 @@ class _DataStore:
             print(f"WARNING - use_memory is already set to {new_val}")
         return new_val
 
-    def put(self, data):
+    def put(self, data) -> bool:
         if self.size >= self.max_size:
-            print("Cannot save more data.")
-            return None
+            # Cannot save more data
+            return False
         if self.use_memory:
             self.__put_in_memory(data)
         else:
             self.__put_in_shelf(data)
         self.__size += 1
+        return True
 
     def __put_in_memory(self, data):
         self.__queue.put(data)
@@ -112,7 +110,7 @@ class _DataStore:
             data = self.__get_from_memory()
         else:
             data = self.__get_from_shelf()
-        self.__size -=1
+        self.__size -= 1
         return data
 
     def __get_from_memory(self):
@@ -135,11 +133,11 @@ class _DataStore:
             data = self.__queue.get()
             self.__shelf[str(time.time())] = data
 
-    def import_queue_from_file(self):
+    def import_queue_from_shelf(self):
         q = queue.Queue()
         generator = iter(self.__shelf.keys())
         for key in generator:
-            q.put(file[key])
+            q.put(self.__shelf[key])
         return q
 
     def __len__(self):

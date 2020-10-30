@@ -1,11 +1,10 @@
 import abc
 import pathlib
-import queue
 import logging
-from sys import getsizeof
+import time
 from collections.abc import MutableSequence, Set
 from functools import wraps
-from typing import Callable, Union, Optional, List, Tuple, Text, BinaryIO, Any
+from typing import Callable, Union, Optional, List, Text, Any
 from resilient_exporters.utils import is_able_to_connect, _DataStore
 from resilient_exporters.exporters import ExportResult
 
@@ -32,10 +31,10 @@ class Exporter(metaclass=abc.ABCMeta):
                  use_memory: bool = True,
                  manual_reexport: bool = True,
                  *,
-                 tmp_file: Union[Text, pathlib.Path, BinaryIO, None] = None,
-                 reinitialize_tmp_file: bool = True,
+                 tmp_file: Union[Text, pathlib.Path, None] = None,
+                 #@TODO: reinitialize_tmp_file: bool = True,
                  save_unsent_data: bool = True,
-                 name: Optional[Text] = None,
+                 #@TODO: name: Optional[Text] = None,
                  test_url: Optional[Text] = None):
         if timeout < 0:
             raise ValueError("timeout must be non-negative and non null")
@@ -52,13 +51,17 @@ class Exporter(metaclass=abc.ABCMeta):
 
         self._only_stop_if_all_data_sent = False
         self._datastore = _DataStore(use_memory=use_memory,
-                                      shelf_filename=self.tmp_filename)
+                                     shelf_filename=self.tmp_filename)
         self.__approx_qsize = 0
         self.__initialized = True
         Exporter.__instantiated += 1
         self.__is_sending_unsent_data = False
 
-        self.send = self._exporter_wrapper(self.send)
+        # If __init__ is called by an exporter that implements the `send` method
+        # which means the type of self must be != "Exporter", e.g."FileExporter"
+        # we wrap the `send` method to include pre- and post- processes.
+        if type(self).__name__ != "Exporter":
+            self.send = self._exporter_wrapper(self.send)
         logger.debug(f"Exporter {self.name} instantiated.")
 
     @property
@@ -81,17 +84,18 @@ class Exporter(metaclass=abc.ABCMeta):
         self._datastore.use_memory = new_val
         return new_val
 
-    @property
-    def transform(self) -> Optional[Callable]:
-        """Getter for `transform`. It has no corresponding setter. `transform`
-        cannot be changed after instanciation to avoid corrupting previously
-        transformed data.
-
-        Returns:
-            Optional[Callable]: the `transform` function or `None` if none has
-            been provided at initialisation.
-        """
-        return self.__transform
+    #@TODO: getter for transform
+    #@property
+    #def transform(self) -> Optional[Callable]:
+    #    """Getter for `transform`. It has no corresponding setter. `transform`
+    #    cannot be changed after instanciation to avoid corrupting previously
+    #    transformed data.
+    #
+    #    Returns:
+    #        Optional[Callable]: the `transform` function or `None` if none has
+    #        been provided at initialisation.
+    #    """
+    #    return self.__transform
 
     def transform(self, data: Any) -> Any:
         """Applies `transform` to the given data.
@@ -180,7 +184,7 @@ class Exporter(metaclass=abc.ABCMeta):
         """
         self.__is_sending_unsent_data = True
         results = [self.send(d["data"], **d["kwargs"]) \
-                   for d in self.__datastore]
+                   for d in self._datastore]
         self.__is_sending_unsent_data = False
         return results
 
@@ -196,7 +200,8 @@ class Exporter(metaclass=abc.ABCMeta):
     def _process_result(self,
                         result: ExportResult,
                         data: Any,
-                        kwargs: dict) -> Union[ExportResult,List[ExportResult]]:
+                        kwargs: dict) -> Union[ExportResult, \
+                                               List[ExportResult]]:
         if result.successful:
             if not self.manual_reexport \
                 and is_able_to_connect(self.TEST_URL)\

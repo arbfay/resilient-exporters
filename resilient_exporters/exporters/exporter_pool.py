@@ -1,12 +1,10 @@
-import queue
 import pathlib
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from sys import getsizeof
-from typing import Callable, Union, Optional, List, Iterable, Text, BinaryIO, Any
+from typing import Callable, Union, Optional, List, Iterable, Text, Any
 from resilient_exporters.exporters import Exporter, ExportResult
 from resilient_exporters.exceptions import InvalidConfigError
-from resilient_exporters.utils import generate_rand_name, is_able_to_connect
+from resilient_exporters.utils import is_able_to_connect
 
 logger = logging.getLogger(__name__)
 
@@ -72,17 +70,17 @@ class ExporterPool(Exporter):
                  use_memory: bool = True,
                  manual_reexport: bool = False,
                  *,
-                 tmp_file: Union[Text, pathlib.Path, BinaryIO, None] = None,
-                 save_unsent_data: bool = True,
-                 name: Optional[Text] = None):
+                 tmp_file: Union[Text, pathlib.Path, None] = None,
+                 save_unsent_data: bool = True):
+                 #@TODO: name: Optional[Text] = None):
         super(ExporterPool, self).__init__(transform=transform,
                                            use_memory=use_memory,
                                            tmp_file=tmp_file,
                                            manual_reexport=manual_reexport,
                                            save_unsent_data=save_unsent_data)
         if num_threads < 1:
-            raise InvalidConfigError(self, 'num_threads must be >= 1;'
-                                'use num_threads=1 to disable multithreading.')
+            raise InvalidConfigError(self, "num_threads must be >= 1; use \
+                                    num_threads=1 to disable multithreading.")
 
         self.num_threads = num_threads
         self.wait_for_result = wait_for_result
@@ -116,7 +114,7 @@ class ExporterPool(Exporter):
         if self._run_transform:
             exporter._run_transform = False
         exporter._save_unsent_data = not self.save_unsent_data
-        self.__exporters.append(exporter)
+        self.__exporters[exporter.name] = exporter
 
     def send(self, data: Any, **kwargs) -> List[ExportResult]:
         """Runs the `send` method of all its exporters. If the pool's
@@ -170,7 +168,7 @@ class ExporterPool(Exporter):
                 and is_able_to_connect(self.TEST_URL) \
                 and self.has_unsent_data():
                 logger.info("Attempt to send previously unsent data.")
-                return result + self.send_unsent_data()
+                return results + self.send_unsent_data()
         elif summed_res == 0 and self._save_unsent_data:
             # all have failed
             self.save_unsent_data(data, kwargs, self.name)

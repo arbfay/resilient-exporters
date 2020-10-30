@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+
+"""
+resilient_exporters.exceptions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module contains the cutom exceptions used in resilient_exporters.
+"""
 
 __all__ = ["ResilientExporterException", "MissingModuleError", \
            "MissingConfigError", "InvalidConfigError", "ExportError", \
@@ -11,9 +19,9 @@ class ResilientExporterException(Exception):
             self.type = type(exporter).__name__
             self.name = exporter.name
             self.content = f"Exception raised in {self.name} of type {self.type}"
-            super(ResilientExporterError, self).__init__(self.content)
+            super(ResilientExporterException, self).__init__(self.content)
         else:
-            super(ResilientExporterError, self).__init__(*args, **kwargs)
+            super(ResilientExporterException, self).__init__(*args, **kwargs)
 
 class MissingModuleError(ResilientExporterException, ModuleNotFoundError):
     """Module not found. Can be installed doing resilient-exporters[...]"""

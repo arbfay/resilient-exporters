@@ -14,7 +14,7 @@ try:
 except ModuleNotFoundError:
     logger.error("""PyMongo not available. Install using:
                     pip install resilient-transmitter[mongo]""")
-    raise MissingModuleError(self)
+    raise MissingModuleError
 
 class MongoDBExporter(Exporter):
     """Exporter for MongoDB.

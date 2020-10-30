@@ -10,7 +10,7 @@ docs_requires = all_requires + ["sphinx", "sphinxbootstrap4theme"]
 with open("README.md", "r") as readme:
     setup(
         name='resilient-exporters',
-        version='0.1.0',
+        version='0.1.1',
         packages=['resilient_exporters'],
         python_requires='>=3.5',
         setup_requires=["setuptools", "wheel"],

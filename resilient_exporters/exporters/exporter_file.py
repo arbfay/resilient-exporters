@@ -1,7 +1,8 @@
 import os
 import json
 import logging
-from typing import Optional, Text, Any, Union, Iterable
+import shutil
+from typing import Optional, Text, Union, Iterable
 from resilient_exporters.exporters import Exporter, ExportResult
 from resilient_exporters.exceptions import ExportError
 
@@ -50,7 +51,7 @@ class FileExporter(Exporter):
         self.__max_lines = max_lines #max lines in file
         self.__remaining_lines = -1
 
-        self.start()
+        self.start(append=append)
 
         # Some logic in case there's a max lines
         if self.__max_lines is not None:
@@ -90,17 +91,17 @@ class FileExporter(Exporter):
        new file, then replacing the old file with the new file. By default,
        removes the first line.
     """
-    def remove_lines(self, indices: Iterable[int] = [0]) -> bool:
+    def remove_lines(self, indices: Iterable[int] = None) -> bool:
+        if indices is None:
+            indices = [0]
         new_filename = self.__filename + ".new"
         failed = False
         try:
             new_file = open(new_filename, "w")
-            old_file = self.target_file
-
             for count, line in enumerate(self.target_file):
                 if count not in indices:
                     new_file.write(line)
-        except:
+        except Exception:
             failed = True
         finally:
             self.target_file.close()
@@ -134,10 +135,8 @@ class FileExporter(Exporter):
                                      Has the FileExporter been stopped?")
         if self.__max_lines is None:
             self.write_lines(data)
-            return ExportResult(None, True)
         elif self.__remaining_lines > 0:
             self.write_lines(data)
-            return ExportResult(None, True)
         # @TODO a should new data replace old data if the file is full?
         #elif self.keep_new_data:
         #    self.remove_lines()
