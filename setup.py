@@ -38,7 +38,6 @@ with open("README.md", "r") as readme:
             "Intended Audience :: Other Audience",
             "License :: OSI Approved :: MIT License",
             "Development Status :: 2 - Pre-Alpha",
-            "Programming Language :: Python :: 3.5",
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",

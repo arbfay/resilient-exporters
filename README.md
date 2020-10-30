@@ -2,7 +2,7 @@
 ![PyPI](https://img.shields.io/pypi/v/resilient-exporters?logo=pypi&logoColor=white&style=for-the-badge)
 ![GitHub Build Status](https://img.shields.io/github/workflow/status/arbfay/resilient-exporters/Python%20package?logo=github&style=for-the-badge)
 ![License](https://img.shields.io/github/license/arbfay/resilient-exporters?style=for-the-badge)
-![Python Version](https://img.shields.io/badge/3.5+%20-%2314354C.svg?label=PYTHON&style=for-the-badge&logo=python&logoColor=white)
+![Python Version](https://img.shields.io/badge/3.6+%20-%2314354C.svg?label=PYTHON&style=for-the-badge&logo=python&logoColor=white)
 
 Resilient-exporters abstracts away common tasks when sending or saving data from an application. It has been designed to send data to different targets and manage common issues for applications running on edge devices such as a Raspberry Pi or Nvidia Jetson Nano:
 - Internet connection interruptions;
