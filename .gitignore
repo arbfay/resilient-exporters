@@ -138,6 +138,6 @@ dmypy.json
 cython_debug/
 
 # Any other relevant files and directories
-.txt
-.db
+*.txt
+*.db
 generated/
