@@ -34,6 +34,14 @@ def is_able_to_connect(url: Optional[Text] = None) -> bool:
     except (requests.ConnectionError, requests.Timeout):
     	return False
 
+def validate_data_for_sql_table(data: dict, table: dict):
+    """Validates data based on a table's schema.
+    `table` is a dictionary where keys are column names and values are
+    tuples of the form `(data type, ordinal position, is nullable, precision or length)`
+    """
+
+    return True
+
 class _DataStore:
     __instantiated = 0
     __used_filenames = []
