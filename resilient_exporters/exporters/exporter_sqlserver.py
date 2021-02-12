@@ -61,7 +61,6 @@ class SQLServerExporter(Exporter):
                  username: Text = None,
                  password: Text = None,
                  default_table: Text = None,
-                 create_table_if_inexistent: bool = False,
                  **kwargs):
         super(SQLServerExporter, self).__init__(**kwargs)
 
@@ -71,7 +70,6 @@ class SQLServerExporter(Exporter):
                                      database=database)
 
         self.__default_table = default_table
-        self.create_table_if_inexistent = create_table_if_inexistent
 
         # List tables in the database
         try:
@@ -79,7 +77,7 @@ class SQLServerExporter(Exporter):
             self.__all_tables = {}
             for row in self.__conn:
                 self.__all_tables[row["TABLE_NAME"]] = {}
-        except .mssql.MSSQLDataBaseException as e:
+        except _mssql.MSSQLDataBaseException as e:
             logging.error(e)
             raise InvalidConfigError(self, "Cannot retrieve database info. Is \
                                             the configuration valid? Does the user have read rights?")
@@ -98,10 +96,6 @@ class SQLServerExporter(Exporter):
                 col_info = (col["DATA_TYPE"], col["ORDINAL_POSITION"], col["IS_NULLABLE"], precision)
 
                 self.__all_tables[table_name][col["COLUMN_NAME"]] = col_info
-
-    def _create_table(self, data: dict):
-        # Creates a table in the database
-        return
 
     def send(self,
              data: dict,
@@ -124,12 +118,13 @@ class SQLServerExporter(Exporter):
                 in the arguments and default values.
         """
         if table is None:
+            if self.__default_table is None:
+                    logger.error("""No table name given and no default table 
+                                    configured.""")
+                    raise MissingConfigError(self, """No table given by 
+                            argument nor default table configured. Please 
+                            provide a table name.""")
             table = self.__default_table
-
-        if table is None:
-            logger.error("No table name given and no default table configured.")
-            raise MissingConfigError(self, "No table given by argument nor \
-                    default table configured. Please provide a table name.")
 
         if table in self.__all_tables.keys():
             # Validates the data, raises errors in case something is wrong
@@ -142,11 +137,9 @@ class SQLServerExporter(Exporter):
             self.__conn.execute_non_query(f"""INSERT INTO {table}({columns})
                                               VALUES({values})""", table)
             return ExportResult(None, True)
-        elif self.create_table_if_inexistent:
-            self._create_table(data)
-            self.send(data, table=table)
         else:
             logger.error(f"Invalid table name provided: {table}")
             raise InvalidConfigError(self, f"""Table {table} does not exist in
-                                            database. Provide an existing table name or set attribute `create_table_if_inexistent` to `True`.""")
+                                                database. Provide the name of 
+                                                an existing table""")
                                             

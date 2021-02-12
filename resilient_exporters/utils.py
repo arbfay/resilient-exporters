@@ -5,6 +5,7 @@ import random
 import string
 from typing import Optional, Text
 import requests
+from resilient_exporters.exceptions import DataTypeError
 
 def generate_rand_name() -> str:
     """Generate a random name of the form "export_XXXXXX" where XXXXXX are
@@ -39,6 +40,16 @@ def validate_data_for_sql_table(data: dict, table: dict):
     `table` is a dictionary where keys are column names and values are
     tuples of the form `(data type, ordinal position, is nullable, precision or length)`
     """
+    for key, val in data.items():
+        if val is None:
+            if table[key][2] == False:
+                raise DataTypeError(self, f"Column '{key}' is not nullable, but 
+                                            value provided is None.")
+        elif not isinstance(val, table[key][0]):
+            raise DataTypeError(self, f"Invalid data type for '{key}'")
+        elif isinstance(val, str) and len(val) > table[key][3]:
+            raise DataTypeError(self, f"String of chars too long for '{key}'. 
+                                    It must be {table[key][3]} chars maximum.")
 
     return True
 
