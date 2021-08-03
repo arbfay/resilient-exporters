@@ -141,3 +141,4 @@ cython_debug/
 *.txt
 *.db
 generated/
+.DS_Store
