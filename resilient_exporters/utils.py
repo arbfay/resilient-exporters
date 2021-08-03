@@ -43,12 +43,12 @@ def validate_data_for_sql_table(data: dict, table: dict):
     for key, val in data.items():
         if val is None:
             if table[key][2] == False:
-                raise DataTypeError(self, f"Column '{key}' is not nullable, but 
+                raise DataTypeError(self, f"Column '{key}' is not nullable, but \
                                             value provided is None.")
         elif not isinstance(val, table[key][0]):
             raise DataTypeError(self, f"Invalid data type for '{key}'")
         elif isinstance(val, str) and len(val) > table[key][3]:
-            raise DataTypeError(self, f"String of chars too long for '{key}'. 
+            raise DataTypeError(self, f"String of chars too long for '{key}'. \
                                     It must be {table[key][3]} chars maximum.")
 
     return True
