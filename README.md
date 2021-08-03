@@ -44,8 +44,7 @@ Some features for some exporters might be missing. Raise an issue on Github to a
 from resilient_exporters import FileExporter
 
 exporter = FileExporter(target_file="mydata.txt",
-                        max_lines=1000,
-                        keep_new_data=True)
+                        max_lines=100)
 
 mydata = ["value1", "value2"]
 exporter.send(mydata)

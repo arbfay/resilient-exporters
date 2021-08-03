@@ -1,5 +1,5 @@
 import os
-import json
+import orjson as json
 import logging
 import shutil
 from typing import Optional, Text, Union, Iterable
@@ -15,9 +15,9 @@ class FileExporter(Exporter):
         target_file (str): the path of the file. The user must have write
             rights on the file.
         max_lines (int): the maximum number of lines in the file, incl. the
-            lines already present. If `None`, there's no limit.
+            lines already present. If `None`, there's no limit. Default to `None`.
         append (bool): if `True`, will append the data to the file.
-            Otherwise, it will overwrite the file.
+            Otherwise, it will overwrite the file. Default to `True`.
         **kwargs : the keyword arguments to pass down to parent's class Exporter
     .. admonition:: Example
 
@@ -46,7 +46,6 @@ class FileExporter(Exporter):
         #Create file if it doesn't exist
         if not os.path.isfile(target_file):
             open(target_file, "x").close()
-
         self.__filename = target_file
         self.__max_lines = max_lines #max lines in file
         self.__remaining_lines = -1
@@ -169,7 +168,7 @@ class FileExporter(Exporter):
         self.target_file.close()
 
     def _create_stream_for_file(self, append: bool = True):
-        self.target_file = open(self.__filename, "a" if append else "w")
+        self.target_file = open(self.__filename, "a+" if append else "w+")
 
     def __del__(self):
         self.stop()
