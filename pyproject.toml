@@ -1,0 +1,43 @@
+[build-system]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "resilient-exporters"
+version = "0.1.1"
+license = "MIT"
+description = "A package to export data to databases resiliently."
+authors = ["Fayçal Arbai <arbai.faycal@gmail.com>"]
+readme = "README.md"
+repository = "https://github.com/arbfay/resilient-exporters.git"
+documentation = "https://resilient-exporters.readthedocs.io"
+keywords = ["data-engineering", "exporter", "data", "mongodb", "elasticsearch"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Other Audience",
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Topic :: Database",
+    "Topic :: Home Automation",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed"
+]
+packages = [{ include = "resilient_exporters" }]
+
+[tool.poetry.dependencies]
+python = ">=3.6"
+requests = "*"
+pymongo = "*"
+elasticsearch = "*"
+orjson = "*"
+sphinx = "*"
+sphinxbootstrap4theme = "*"
