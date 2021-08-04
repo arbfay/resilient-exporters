@@ -36,6 +36,7 @@ Currently supported:
 - Text file
 - MongoDB
 - ElasticSearch
+- PostgreSQL
 
 Some features for some exporters might be missing. Raise an issue on Github to ask for an implementation and help improve the package.
 
@@ -77,6 +78,21 @@ exporter = ElasticSearchExporter(target_ip="127.0.0.1",
 
 mydata = {"field1": "value1"}
 exporter.send(mydata)
+```
+
+# To PostgreSQL
+```python
+from resilient_exporters.exporters import PostgreSQLExporter
+
+exporter = PostgreSQLExporter(target_host="myserver.domain.net",
+                              username="username",
+                              password="my-password",
+                              database="profiles",
+                              default_table="scientists")
+
+data = {"name": "Richard Feynman",
+        "age": 69}
+exporter.send(data)
 ```
 
 ### Multiple distant targets - Pools
@@ -125,9 +141,10 @@ exporter.send(mydata)
 ## Additional information
 The `resilient_exporters.Exporter` is at the core of the package. All the other exporters inherits from it.
 
-`Exporter` manages the export of data to a target, however each target need specific logic to send data. All these subclasses, such as `FileExporter` or `MongoDBExporter`, implement the `Exporter.send` method and manage the needed options. Some exporters might need additional packages to be usable:
+`Exporter` manages the export of data to a target, however each target need specific logic to send data. All these subclasses, such as `FileExporter` or `MongoDBExporter`, implements the `Exporter.send` method and manages the needed options. Some exporters might need additional packages to be usable:
 - `pymongo` for `MongoDBExporter`
 - `elasticsearch` for `ElasticSearchExporter`
+- `psycopg2` for `PostgreSQLExporter`
 
 ## Documentation
 More documentation available [here.](https://resilient-exporters.readthedocs.io)

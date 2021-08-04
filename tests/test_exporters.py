@@ -94,3 +94,20 @@ def test_mongoexp_dictdata():
     mydata = {"field1": "value11",
                "field2": "value22"}
     assert True == exp.send(mydata, db="test-transmitter", collection="dataset").successful
+
+@pytest.mark.skipif(os.getenv('SQL_SERVER_ADD', None) is None,
+                    reason="No configured SQL Server address.")
+def test_sqlserverexp_dictdata():
+    from resilient_exporters.exporters import SQLServerExporter
+
+    exp = SQLServerExporter(target_host=os.environ['SQL_SERVER_ADD'],
+                            target_port=1433,
+                            username=os.environ['SQL_SERVER_USERNAME'],
+                            password=os.environ['SQL_SERVER_PWD'],
+                            database=os.getenv('SQL_SERVER_DB', None),
+                            create_table_if_inexistent=True)
+
+    mydata = {"field1": "value11",
+              "field2": 0.1}
+
+    assert True == exp.send(mydata, table="test").successful

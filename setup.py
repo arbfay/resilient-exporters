@@ -4,7 +4,7 @@ import setuptools
 from distutils.core import setup
 
 install_requires = ["requests"]
-all_requires = install_requires + ["pymongo", "elasticsearch"]
+all_requires = install_requires + ["pymongo", "elasticsearch", "psycopg2-binary"]
 docs_requires = all_requires + ["sphinx", "sphinxbootstrap4theme"]
 
 with open("README.md", "r") as readme:
@@ -12,11 +12,12 @@ with open("README.md", "r") as readme:
         name='resilient-exporters',
         version='0.1.3',
         packages=['resilient_exporters'],
-        python_requires='>=3.5',
+        python_requires='>=3.6',
         setup_requires=["setuptools", "wheel"],
         install_requires=["requests"],
         extras_require={"mongo": ["pymongo"],
                         "elastic": ["elasticsearch[async]"],
+                        "postgres": ["psycopg2-binary"],
                         "all": all_requires,
                         "docs": docs_requires},
         author="Fayçal Arbai",
