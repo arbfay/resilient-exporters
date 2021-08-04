@@ -4,7 +4,7 @@ import setuptools
 from distutils.core import setup
 
 install_requires = ["requests"]
-all_requires = install_requires + ["pymongo", "elasticsearch", "pymssql"]
+all_requires = install_requires + ["pymongo", "elasticsearch", "psycopg2-binary"]
 docs_requires = all_requires + ["sphinx", "sphinxbootstrap4theme"]
 
 with open("README.md", "r") as readme:
@@ -17,7 +17,7 @@ with open("README.md", "r") as readme:
         install_requires=["requests"],
         extras_require={"mongo": ["pymongo"],
                         "elastic": ["elasticsearch[async]"],
-                        "sqlserver": ["pymssql"],
+                        "postgres": ["psycopg2-binary"],
                         "all": all_requires,
                         "docs": docs_requires},
         author="Fayçal Arbai",
