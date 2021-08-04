@@ -23,6 +23,12 @@ To use the package:
 ```
 pip install resilient-exporters
 ```
+
+With all the additional packages needed for the different exporters:
+```
+pip install resilient-exporters[all]
+```
+
 ### Dev installation
 If you'd like to have a editable, up-to-date version of the files, do:
 ```
@@ -47,7 +53,7 @@ from resilient_exporters import FileExporter
 exporter = FileExporter(target_file="mydata.txt",
                         max_lines=100)
 
-mydata = ["value1", "value2"]
+mydata = "line of text"
 exporter.send(mydata)
 ```
 
@@ -80,7 +86,7 @@ mydata = {"field1": "value1"}
 exporter.send(mydata)
 ```
 
-# To PostgreSQL
+### To PostgreSQL
 ```python
 from resilient_exporters.exporters import PostgreSQLExporter
 
