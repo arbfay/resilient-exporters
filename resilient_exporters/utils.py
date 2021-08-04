@@ -3,9 +3,46 @@ import time
 import queue
 import random
 import string
-from typing import Optional, Text
+import math
+import logging
 import requests
-from resilient_exporters.exceptions import DataTypeError
+from typing import Optional, Text, Union
+from datetime import datetime
+from .exceptions import DataTypeError
+from collections import namedtuple
+
+ColumnDescription = namedtuple("ColumnDescription", ["col_name", "data_type", "ordinal_position", "is_nullable", "precision"])
+logger = logging.getLogger(__name__)
+
+sql_datatypes_map = {
+        "postgres": {   
+                        "boolean": bool,
+                        "character varying": str,
+                        "varchar": str,
+                        "character": str,
+                        "char": str,
+                        "text": str,
+                        "real": float,
+                        "double precision": float,
+                        "decimal": float,
+                        "numeric": float,
+                        "money": float,
+                        "integer": int,
+                        "smallint": int,
+                        "bigint": int,
+                        "smallserial": int,
+                        "serial": int,
+                        "bigserial": int,
+                        "timestamp": datetime,
+                        "timestamp without time zone": datetime,
+                        "interval": str,
+                        "cidr": str,
+                        "inet": str,
+                        "macaddr": str,
+                        "macaddr8": str,
+                        "USER-DEFINED": str,
+                    }
+    }
 
 def generate_rand_name() -> str:
     """Generate a random name of the form "export_XXXXXX" where XXXXXX are
@@ -35,23 +72,79 @@ def is_able_to_connect(url: Optional[Text] = None) -> bool:
     except (requests.ConnectionError, requests.Timeout):
     	return False
 
-def validate_data_for_sql_table(data: dict, table: dict):
+def _stringify_sql(value):
+    if isinstance(value, str):
+        return f"'{value}'"
+    elif value is None:
+        return "NULL"
+    else:
+        return str(value)
+
+def _transform_data_for_sql_query(data: Union[dict, tuple]):
+    generator = enumerate(data) if isinstance(data, tuple) else data.items()
+    for k, v in generator:
+        if isinstance(v, bool):
+            data[k] = "true" if v else "false"
+        if isinstance(v, datetime):
+            data[k] = str(v)
+        if isinstance(v, float):
+            if v == math.inf:
+                data[k] = 'Infinity'
+            elif v == -math.inf:
+                data[k] = '-Infinity'
+            elif math.isnan(v):
+                data[k] = 'NaN'
+        if isinstance(v, list):
+            data[k] = str(v).replace("[", "{").replace("]", "}")
+
+    columns = None
+    if isinstance(data, dict):
+        columns = ",".join(data.keys())
+
+    values = ",".join([ f"'{val}'" if isinstance(val, str) else _stringify_sql(val) for val in data.values()])
+    values = values.replace("None", "NULL")
+    return columns, values
+
+def _describe_postgres_column(col: tuple):
+    """Input column is a tuple of the form:
+        (table_name, column_name, data_type, ordinal_position, is_nullable, character_maximum_length, numeric_precision, datetime_precision)
+    """
+    if col[5]:
+        precision = col[5]
+    elif col[6]:
+        precision = col[6]
+    else:
+        precision = col[7]
+
+    try:
+        data_type = sql_datatypes_map["postgres"][col[2]]
+    except KeyError:
+        logger.error(f"Data type not found in mapping: {col[2]}")
+        data_type = None
+    
+    ordinal_position = col[3]
+    is_nullable = True if col[4] == 'YES' else False
+
+    return ColumnDescription(col[1], data_type, ordinal_position, is_nullable, precision)
+
+def _validate_data_for_sql_table(data: dict, table: dict):
     """Validates data based on a table's schema.
-    `table` is a dictionary where keys are column names and values are
-    tuples of the form `(data type, ordinal position, is nullable, precision or length)`
+    `table` is a dictionary where keys are column names and values are of the type 
+    `resilient_exporters.utils.ColumnDescription`.
     """
     for key, val in data.items():
         if val is None:
-            if table[key][2] == False:
+            if not table[key].is_nullable:
                 raise DataTypeError(self, f"Column '{key}' is not nullable, but \
                                             value provided is None.")
-        elif not isinstance(val, table[key][0]):
-            raise DataTypeError(self, f"Invalid data type for '{key}'")
-        elif isinstance(val, str) and len(val) > table[key][3]:
-            raise DataTypeError(self, f"String of chars too long for '{key}'. \
-                                    It must be {table[key][3]} chars maximum.")
-
-    return True
+        elif not isinstance(val, table[key].data_type):
+            raise DataTypeError(self, f"Invalid data type for '{key}'.")
+        elif isinstance(val, str):
+            if isinstance(table[key].precision, int):
+                if len(val) > table[key].precision:
+                    raise DataTypeError(self, f"String of chars too long for '{key}'. \
+                                                It must be {table[key][3]} chars maximum.")
+    return
 
 class _DataStore:
     __instantiated = 0
