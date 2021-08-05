@@ -14,6 +14,7 @@ except ModuleNotFoundError:
                     pip install resilient-transmitter[elastic]""")
     raise MissingModuleError
 
+
 class ElasticSearchExporter(Exporter):
     """Exporter for ElasticSearch.
 
@@ -28,13 +29,13 @@ class ElasticSearchExporter(Exporter):
         cloud_id (str): cloud id used to connect to a Elastic Cloud server.
                         A username and password is most likely required to be
                         able to connect.
-        api_key (str): a base64 encoded token to authenticate to a ElasticSearch
-                       server.
+        api_key (str): a base64 encoded token to authenticate to an
+                       ElasticSearchserver.
         sniff_on_start (bool): see Elasticsearch documentation.
         default_index (str): a default index to use when ``send`` is called. If
                         None, an index will have to be provided as an argument
                         when calling ``send``.
-        **kwargs : the keyword arguments to pass down to parent's class Exporter
+        **kwargs : the keyword arguments to pass down to parent class Exporter
 
     .. admonition:: Warning
 
@@ -48,7 +49,7 @@ class ElasticSearchExporter(Exporter):
                  password: Text = None,
                  cluster_hosts: Iterable[Text] = None,
                  cloud_id: Text = None,
-                 api_key: Text = None, #base 64 encoded token
+                 api_key: Text = None,  # base 64 encoded token
                  sniff_on_start: bool = True,
                  default_index: Optional[Text] = None,
                  use_ssl: bool = False,
@@ -119,7 +120,7 @@ class ElasticSearchExporter(Exporter):
                 provided at initialisation.
 
         Returns:
-            ExportResult: (Object, True) if successful, (None, False) otherwise.
+            ExportResult: (Object, True) if successful, (None, False) otherwise
 
         Raises:
             MissingConfigError: if no index is found.
@@ -137,5 +138,6 @@ class ElasticSearchExporter(Exporter):
             logger.warning("elasticsearch.exceptions.ConnectionError")
         except elasticsearch.exceptions.RequestError:
             logger.error("elasticsearch.exceptions.RequestError")
-            raise InvalidConfigError(self, "elasticsearch.exceptions.RequestError")
+            raise InvalidConfigError(self,
+                                     "elasticsearch.exceptions.RequestError")
         return ExportResult(None, False)

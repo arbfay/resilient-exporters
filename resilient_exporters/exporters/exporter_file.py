@@ -8,6 +8,7 @@ from resilient_exporters.exceptions import ExportError
 
 logger = logging.getLogger(__name__)
 
+
 class FileExporter(Exporter):
     """Exporter for a text file.
 
@@ -15,10 +16,12 @@ class FileExporter(Exporter):
         target_file (str): the path of the file. The user must have write
             rights on the file.
         max_lines (int): the maximum number of lines in the file, incl. the
-            lines already present. If `None`, there's no limit. Default to `None`.
+            lines already present. If `None`, there's no limit.
+            Default to `None`.
         append (bool): if `True`, will append the data to the file.
-            Otherwise, it will overwrite the file. Default to `True`.
-        **kwargs : the keyword arguments to pass down to parent's class Exporter
+            Otherwise, it will overwrite the file.
+            Default to `True`.
+        **kwargs : the keyword arguments to pass down to parent class Exporter
     .. admonition:: Example
 
         .. code-block:: python
@@ -43,11 +46,11 @@ class FileExporter(Exporter):
                  **kwargs):
         super(FileExporter, self).__init__(**kwargs)
 
-        #Create file if it doesn't exist
+        # Create file if it doesn't exist
         if not os.path.isfile(target_file):
             open(target_file, "x").close()
         self.__filename = target_file
-        self.__max_lines = max_lines #max lines in file
+        self.__max_lines = max_lines
         self.__remaining_lines = -1
 
         self.start(append=append)
@@ -79,11 +82,15 @@ class FileExporter(Exporter):
             data = [data]
         for piece in data:
             if self.__remaining_lines != 0:
-                line = piece if not isinstance(piece, dict) else json.dumps(piece)
+                if not isinstance(piece, dict):
+                    line = piece
+                else:
+                    line = json.dumps(piece)
                 print(line, file=self.target_file)
                 self.__remaining_lines -= 1
             else:
-                logger.warning(f"Can't write more data in file {self.__filename}")
+                logger.warning(f"Can't write more data in \
+                                file {self.__filename}")
 
     """remove_lines:
        Removing by copying the file (except lines of given indices) into a
@@ -122,7 +129,7 @@ class FileExporter(Exporter):
                 json document.
 
         Returns:
-            ExportResult: if the operation was successful, returns (None, True),
+            ExportResult: if successful, returns (None, True),
                           otherwise (None, False)
 
         Raises:
@@ -137,7 +144,7 @@ class FileExporter(Exporter):
         elif self.__remaining_lines > 0:
             self.write_lines(data)
         # @TODO a should new data replace old data if the file is full?
-        #elif self.keep_new_data:
+        # elif self.keep_new_data:
         #    self.remove_lines()
         #    self.write_lines(data)
         else:

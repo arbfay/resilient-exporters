@@ -1,4 +1,3 @@
-import urllib
 import logging
 from typing import Text, Union
 from ..exporters import Exporter, ExportResult
@@ -6,9 +5,7 @@ from ..utils import _validate_data_for_sql_table, \
                     _transform_data_for_sql_query, \
                     _describe_postgres_column
 from ..exceptions import MissingConfigError, \
-                                           InvalidConfigError, \
-                                           MissingModuleError, \
-                                           ExportError
+                         InvalidConfigError
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +15,7 @@ except ModuleNotFoundError:
     logger.error("""Module psycopg2 not available. Install using:
                     pip install resilient-exporters[postgres]""")
     raise
+
 
 class PostgreSQLExporter(Exporter):
     """Exporter for PostgreSQL.
@@ -30,7 +28,7 @@ class PostgreSQLExporter(Exporter):
         database (str):
         default_table (str):
         create_table_if_inexistent (bool): Default to False
-        **kwargs : the keyword arguments to pass down to parent's class Exporter
+        **kwargs : the keyword arguments to pass down to parent class Exporter
     Raises:
         InvalidConfigError: if it cannot retrieve the server information, which
             is likely due an invalid configuration of the target.
@@ -60,14 +58,15 @@ class PostgreSQLExporter(Exporter):
                  password: Text = None,
                  default_table: Text = None,
                  **kwargs):
-        assert conn_string or (target_host and target_port), "Either a connection string or target host is needed."
+        assert conn_string or (target_host and target_port), \
+            "Either a connection string or target host is needed."
         super(PostgreSQLExporter, self).__init__(**kwargs)
 
         if conn_string:
             self.__conn = psycopg2.connect(conn_string)
         else:
             self.__conn = psycopg2.connect(host=target_host,
-                                           port=port,
+                                           port=target_port,
                                            user=username,
                                            password=password,
                                            dbname=database)
@@ -76,25 +75,27 @@ class PostgreSQLExporter(Exporter):
 
         # List tables in the database
         try:
-            #self.__cur.execute("SELECT * FROM INFORMATION_SCHEMA.TABLES;")
-            self.__cur.execute("SELECT * FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' \
+            self.__cur.execute("SELECT * FROM pg_catalog.pg_tables \
+                                WHERE schemaname != 'pg_catalog' \
                                 AND schemaname != 'information_schema';")
             self.__all_tables = {}
             for row in self.__cur.fetchall():
                 self.__all_tables[row[1]] = {}
         except Exception as e:
             logging.error(e)
-            raise InvalidConfigError(self, "Cannot retrieve database info. Is \
-                                            the configuration valid? Does the user have read rights?")
-        
+            raise InvalidConfigError(self, "Cannot retrieve database info. \
+                                            Is the configuration valid? \
+                                            Does the user have read rights?")
         # Get information on columns for each table
-        for table_name in self.__all_tables.keys():
-            self.__cur.execute(f"SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, ORDINAL_POSITION, IS_NULLABLE, \
-                                 CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, DATETIME_PRECISION \
-                                 FROM information_schema.columns WHERE table_name='{table_name}';")
+        for tabname in self.__all_tables.keys():
+            self.__cur.execute(f"SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, \
+                                 ORDINAL_POSITION, IS_NULLABLE, \
+                                 CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, \
+                                 DATETIME_PRECISION FROM \
+                                 information_schema.columns \
+                                 WHERE table_name='{tabname}';")
             for col in self.__cur.fetchall():
-                print(col)
-                self.__all_tables[table_name][col[1]] = _describe_postgres_column(col)
+                self.__all_tables[tabname][col[1]] = _describe_postgres_column(col)
 
     def send(self,
              data: Union[dict, tuple],
@@ -103,14 +104,15 @@ class PostgreSQLExporter(Exporter):
         tables names, if provided at initialisation.
 
         Args:
-            data (Union[dict, tuple]): a dict or tuple representing the document to insert into the
-                collection. If a dict, the keys must be the column names. If a tuple, there must be
+            data (Union[dict, tuple]): a dict or tuple representing the
+                document to insert into the collection. If a dict, the
+                keys must be the column names. If a tuple, there must be
                 as many elements as there are columns in the table.
             table (str): name of the target table. If `None`, will use
                 the default value set at initialisation. Default is `None`.
 
         Returns:
-            ExportResult: the result in the form (ObjectId, True) if successful,
+            ExportResult: the result in the form (Object, True) if successful,
                 (None, False) otherwise.
 
         Raises:
@@ -119,7 +121,8 @@ class PostgreSQLExporter(Exporter):
         """
         if table is None:
             if self.__default_table is None:
-                    raise MissingConfigError(self, "No table given by argument nor default table configured.")
+                raise MissingConfigError(self, "No table given by argument \
+                                                nor default table configured.")
             table = self.__default_table
 
         if table in self.__all_tables.keys():
@@ -129,13 +132,15 @@ class PostgreSQLExporter(Exporter):
 
             if isinstance(data, dict):
                 print(f"INSERT INTO {table}({columns}) VALUES({values});")
-                self.__cur.execute(f"INSERT INTO {table}({columns}) VALUES({values});", table)
+                self.__cur.execute(f"INSERT INTO {table}({columns}) \
+                                    VALUES({values});", table)
             else:
-                self.__cur.execute(f"INSERT INTO {table} VALUES({values});", table)
+                self.__cur.execute(f"INSERT INTO {table} \
+                                    VALUES({values});", table)
             success = bool(self.__cur.rowcount)
             self.__conn.commit()
             return ExportResult(None, success)
         else:
-            raise InvalidConfigError(self, f"""Table {table} does not exist in
-                                                database. Provide the name of 
-                                                an existing table""")
+            raise InvalidConfigError(self, f"Table {table} does not exist in \
+                                            database. Provide the name of \
+                                            an existing table")

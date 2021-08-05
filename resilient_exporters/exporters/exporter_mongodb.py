@@ -15,6 +15,7 @@ except ModuleNotFoundError:
                     pip install resilient-transmitter[mongo]""")
     raise MissingModuleError
 
+
 class MongoDBExporter(Exporter):
     """Exporter for MongoDB.
 
@@ -25,7 +26,7 @@ class MongoDBExporter(Exporter):
         password (str):
         default_db (str):
         default_collection (str):
-        **kwargs : the keyword arguments to pass down to parent's class Exporter
+        **kwargs : the keyword arguments to pass down to parent class Exporter
     Raises:
         InvalidConfigError: if it cannot retrieve the server information, which
             is likely due an invalid configuration of the target.
@@ -118,12 +119,12 @@ class MongoDBExporter(Exporter):
                 collection.
             db (str): name of the target database. If `None`, will use the
                 default value. Default is `None`.
-            collection (str): name of the target colleciton. If `None`, will use
-                the default value. Default is `None`.
+            collection (str): name of the target colleciton. If `None`,
+                will use the default value. Default is `None`.
 
         Returns:
-            ExportResult: the result in the form (ObjectId, True) if successful,
-                (None, False) otherwise.
+            ExportResult: if successful, returns (ObjectId, True),
+                          (None, False) otherwise.
 
         Raises:
             MissingConfigError: if it cannot find a database and/or collection

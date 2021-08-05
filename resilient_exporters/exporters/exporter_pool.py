@@ -8,6 +8,7 @@ from resilient_exporters.utils import is_able_to_connect
 
 logger = logging.getLogger(__name__)
 
+
 class ExporterPool(Exporter):
     """Enables pooling of exporters for improved efficiency and performance.
     All the exporters will be managed by the pool, including the saving of
@@ -20,10 +21,11 @@ class ExporterPool(Exporter):
             ``resilient_exporters.exporters.Exporter``.
         transform (Callable): a function to be invoked at each ``send`` call on
             the passed data. It must return data or exceptions will be raised.
-        num_threads (int): the number of threads to use for ``send`` calls. Must
-            be greater than 1. If 1, multithreading is disabled. Default to 1.
+        num_threads (int): the number of threads to use for ``send`` calls.
+            Must be greater than 1. If 1, multithreading is disabled.
+            Default to 1.
         wait_for_result (bool): value to decide if the instance has to wait for
-            the results of ``send`` calls or not when multithreading is enabled.
+            the result of ``send`` calls or not when multithreading is enabled.
         manual_reexport (bool): if True, the user is responsible to call the
             function ``send_unsent_data`` when appropriate. If False, the
             instance will manage that automatically by assessing the necessity
@@ -57,7 +59,7 @@ class ExporterPool(Exporter):
     Attributes:
         num_threads (int): number of threads used by the instance.
         wait_for_result (bool): value to decide if the instance has to wait for
-            the results of ``send`` calls or not when multithreading is enabled.
+            the results of ``send`` calls or not when multithreading is enabled
     """
     __futures = []
     __instantiated = 0
@@ -72,7 +74,7 @@ class ExporterPool(Exporter):
                  *,
                  tmp_file: Union[Text, pathlib.Path, None] = None,
                  save_unsent_data: bool = True):
-                 #@TODO: name: Optional[Text] = None):
+        # @TODO: name: Optional[Text] = None
         super(ExporterPool, self).__init__(transform=transform,
                                            use_memory=use_memory,
                                            tmp_file=tmp_file,
@@ -128,8 +130,8 @@ class ExporterPool(Exporter):
 
         Args:
             data (Any): the data to export.
-            **kwargs (Any): the keyword arguments to pass down to the exporters'
-                `send` methods.
+            **kwargs (Any): the keyword arguments to pass down to the
+                exporters' `send` methods.
 
         Returns:
             List[ExportResult]: a list of the exporters' results.
@@ -147,7 +149,7 @@ class ExporterPool(Exporter):
                     futures.append(future)
 
                     def save_if_failed(future):
-                        if future.result() == False:
+                        if not future.result():
                             self.save_unsent_data(data, kwargs, exporter.name)
 
                     future.add_done_callback(save_if_failed)
@@ -165,15 +167,15 @@ class ExporterPool(Exporter):
         if summed_res == len(results):
             # all expeditions have been successful
             if not self.manual_reexport \
-                and is_able_to_connect(self.TEST_URL) \
-                and self.has_unsent_data():
+               and is_able_to_connect(self.TEST_URL) \
+               and self.has_unsent_data():
                 logger.info("Attempt to send previously unsent data.")
                 return results + self.send_unsent_data()
         elif summed_res == 0 and self._save_unsent_data:
             # all have failed
             self.save_unsent_data(data, kwargs, self.name)
         else:
-            #mixed results
+            # mixed results
             for exporter, res in zip(self, results):
                 if not res.successful and self._save_unsent_data:
                     self.save_unsent_data(data, kwargs, exporter.name)
@@ -186,7 +188,7 @@ class ExporterPool(Exporter):
             List[ExportResult]: list of the results of the export jobs.
         """
         self.__is_sending_unsent_data = True
-        results = [self.send(d["data"], d["exporter"], **d["kwargs"]) \
+        results = [self.send(d["data"], d["exporter"], **d["kwargs"])
                    for d in self._datastore]
         self.__is_sending_unsent_data = False
         return results
@@ -209,6 +211,6 @@ class ExporterPool(Exporter):
 
     def __del__(self):
         if not self.wait_for_result:
-            res = [f.result() for f in self.__futures]
-            del res
+            _ = [f.result() for f in self.__futures]
+            del _
             del self.__futures

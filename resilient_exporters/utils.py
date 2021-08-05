@@ -11,39 +11,42 @@ from datetime import datetime
 from .exceptions import DataTypeError
 from collections import namedtuple
 
-ColumnDescription = namedtuple("ColumnDescription", ["col_name", "data_type", "ordinal_position", "is_nullable", "precision"])
+ColumnDescription = namedtuple("ColumnDescription",
+                               ["col_name", "data_type", "ordinal_position",
+                                "is_nullable", "precision"])
 logger = logging.getLogger(__name__)
 
 sql_datatypes_map = {
-        "postgres": {   
-                        "boolean": bool,
-                        "character varying": str,
-                        "varchar": str,
-                        "character": str,
-                        "char": str,
-                        "text": str,
-                        "real": float,
-                        "double precision": float,
-                        "decimal": float,
-                        "numeric": float,
-                        "money": float,
-                        "integer": int,
-                        "smallint": int,
-                        "bigint": int,
-                        "smallserial": int,
-                        "serial": int,
-                        "bigserial": int,
-                        "timestamp": datetime,
-                        "timestamp without time zone": datetime,
-                        "interval": str,
-                        "cidr": str,
-                        "inet": str,
-                        "macaddr": str,
-                        "macaddr8": str,
-                        "USER-DEFINED": str,
-                        "ARRAY": list
-                    }
-    }
+    "postgres": {
+            "boolean": bool,
+            "character varying": str,
+            "varchar": str,
+            "character": str,
+            "char": str,
+            "text": str,
+            "real": float,
+            "double precision": float,
+            "decimal": float,
+            "numeric": float,
+            "money": float,
+            "integer": int,
+            "smallint": int,
+            "bigint": int,
+            "smallserial": int,
+            "serial": int,
+            "bigserial": int,
+            "timestamp": datetime,
+            "timestamp without time zone": datetime,
+            "interval": str,
+            "cidr": str,
+            "inet": str,
+            "macaddr": str,
+            "macaddr8": str,
+            "USER-DEFINED": str,
+            "ARRAY": list
+        }
+}
+
 
 def generate_rand_name() -> str:
     """Generate a random name of the form "export_XXXXXX" where XXXXXX are
@@ -54,6 +57,7 @@ def generate_rand_name() -> str:
     """
     suf = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
     return f"exporters_{suf}"
+
 
 def is_able_to_connect(url: Optional[Text] = None) -> bool:
     """Runs a HTTP GET request to the url.
@@ -68,10 +72,11 @@ def is_able_to_connect(url: Optional[Text] = None) -> bool:
     if url is None:
         url = "https://www.google.com"
     try:
-    	_ = requests.get(url, timeout=.5)
-    	return True
+        _ = requests.get(url, timeout=.5)
+        return True
     except (requests.ConnectionError, requests.Timeout):
-    	return False
+        return False
+
 
 def _stringify_sql(value):
     if isinstance(value, str):
@@ -80,6 +85,7 @@ def _stringify_sql(value):
         return "NULL"
     else:
         return str(value)
+
 
 def _transform_data_for_sql_query(data: Union[dict, tuple]):
     generator = enumerate(data) if isinstance(data, tuple) else data.items()
@@ -102,13 +108,16 @@ def _transform_data_for_sql_query(data: Union[dict, tuple]):
     if isinstance(data, dict):
         columns = ",".join(data.keys())
 
-    values = ",".join([ f"'{val}'" if isinstance(val, str) else _stringify_sql(val) for val in data.values()])
+    values = ",".join([f"'{val}'" if isinstance(val, str) else _stringify_sql(val)
+                        for val in data.values()])
     values = values.replace("None", "NULL")
     return columns, values
 
+
 def _describe_postgres_column(col: tuple):
     """Input column is a tuple of the form:
-        (table_name, column_name, data_type, ordinal_position, is_nullable, character_maximum_length, numeric_precision, datetime_precision)
+        (table_name, column_name, data_type, ordinal_position, is_nullable,
+        character_maximum_length, numeric_precision, datetime_precision)
     """
     if col[5]:
         precision = col[5]
@@ -127,6 +136,7 @@ def _describe_postgres_column(col: tuple):
     is_nullable = True if col[4] == 'YES' else False
 
     return ColumnDescription(col[1], data_type, ordinal_position, is_nullable, precision)
+
 
 def _validate_data_for_sql_table(data: dict, table: dict):
     """Validates data based on a table's schema.
@@ -147,6 +157,7 @@ def _validate_data_for_sql_table(data: dict, table: dict):
                                                   It must be {table[key][3]} chars maximum.")
     return
 
+
 class _DataStore:
     __instantiated = 0
     __used_filenames = []
@@ -166,8 +177,9 @@ class _DataStore:
         super().__init__(*args, **kwargs)
         self.__use_memory = use_memory
 
-        self.__filename = generate_rand_name() if shelf_filename is None \
-                                               else shelf_filename
+        self.__filename = generate_rand_name() \
+            if shelf_filename is None \
+            else shelf_filename
         self.__used_filenames.append(self.__filename)
 
         self.__size = 0
@@ -186,11 +198,11 @@ class _DataStore:
 
     @use_memory.setter
     def use_memory(self, new_val: bool) -> bool:
-        if self.__use_memory and new_val == False:
+        if self.__use_memory and new_val is False:
             self.export_queue_to_shelf()
             self.__use_memory = new_val
             self.__queue = None
-        elif self.__use_memory == False and new_val:
+        elif self.__use_memory is False and new_val:
             self.__queue = self.import_queue_from_shelf()
             self.__use_memory = new_val
             self.__shelf.close()

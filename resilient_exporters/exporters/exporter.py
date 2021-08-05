@@ -10,6 +10,7 @@ from resilient_exporters.exporters import ExportResult
 
 logger = logging.getLogger(__name__)
 
+
 class Exporter(metaclass=abc.ABCMeta):
     """Base class of all exporters and ExporterPool. It includes a non-
     implemented `send` function that its children must implement. It has
@@ -27,14 +28,14 @@ class Exporter(metaclass=abc.ABCMeta):
 
     def __init__(self,
                  transform: Optional[Callable] = None,
-                 timeout: int = 30, # in seconds
+                 timeout: int = 30,  # in seconds
                  use_memory: bool = True,
                  manual_reexport: bool = True,
                  *,
                  tmp_file: Union[Text, pathlib.Path, None] = None,
-                 #@TODO: reinitialize_tmp_file: bool = True,
+                 # @TODO: reinitialize_tmp_file: bool = True,
                  save_unsent_data: bool = True,
-                 #@TODO: name: Optional[Text] = None,
+                 # @TODO: name: Optional[Text] = None,
                  test_url: Optional[Text] = None):
         if timeout < 0:
             raise ValueError("timeout must be non-negative and non null")
@@ -57,9 +58,10 @@ class Exporter(metaclass=abc.ABCMeta):
         Exporter.__instantiated += 1
         self.__is_sending_unsent_data = False
 
-        # If __init__ is called by an exporter that implements the `send` method
-        # which means the type of self must be != "Exporter", e.g."FileExporter"
-        # we wrap the `send` method to include pre- and post- processes.
+        # If __init__ is called by an exporter that implements the `send`
+        # method which means the type of self must be != "Exporter",
+        # e.g. "FileExporter".
+        # We wrap the `send` method to include pre- and post- processes.
         if type(self).__name__ != "Exporter":
             self.send = self._exporter_wrapper(self.send)
         logger.debug(f"Exporter {self.name} instantiated.")
@@ -68,8 +70,9 @@ class Exporter(metaclass=abc.ABCMeta):
     def use_memory(self) -> bool:
         """The value `use_memory` of the instance.
 
-        When set to ``True``, it loads the data into memory if it was previously
-        using a file (previous value was ``False``), or vice versa.
+        When set to ``True``, it loads the data into memory if
+        it was previously using a file (previous value was
+        ``False``), or vice versa.
 
         Args:
             new_val (bool): new value for `use_memory`.
@@ -84,9 +87,9 @@ class Exporter(metaclass=abc.ABCMeta):
         self._datastore.use_memory = new_val
         return new_val
 
-    #@TODO: getter for transform
-    #@property
-    #def transform(self) -> Optional[Callable]:
+    # @TODO: getter for transform
+    # @property
+    # def transform(self) -> Optional[Callable]:
     #    """Getter for `transform`. It has no corresponding setter. `transform`
     #    cannot be changed after instanciation to avoid corrupting previously
     #    transformed data.
@@ -127,8 +130,8 @@ class Exporter(metaclass=abc.ABCMeta):
 
         Args:
             data (Any): the core data.
-            kwargs (dict): the keyword arguments to pass to `send` for the given
-                           data.
+            kwargs (dict): the keyword arguments to pass to `send` for
+                           the given data.
             exporter_name (str): the name of the exporter.
 
         Returns:
@@ -159,7 +162,7 @@ class Exporter(metaclass=abc.ABCMeta):
         """
 
         @wraps(send_func)
-        def wrapper(data: Any, *args, **kwargs) -> Union[ExportResult, \
+        def wrapper(data: Any, *args, **kwargs) -> Union[ExportResult,
                                                          List[ExportResult]]:
             logger.debug(f"Sending input data of type {type(data)}")
             if data is None:
@@ -183,7 +186,7 @@ class Exporter(metaclass=abc.ABCMeta):
             List[ExportResult]: list of the results of the export jobs.
         """
         self.__is_sending_unsent_data = True
-        results = [self.send(d["data"], **d["kwargs"]) \
+        results = [self.send(d["data"], **d["kwargs"])
                    for d in self._datastore]
         self.__is_sending_unsent_data = False
         return results
@@ -200,12 +203,12 @@ class Exporter(metaclass=abc.ABCMeta):
     def _process_result(self,
                         result: ExportResult,
                         data: Any,
-                        kwargs: dict) -> Union[ExportResult, \
+                        kwargs: dict) -> Union[ExportResult,
                                                List[ExportResult]]:
         if result.successful:
             if not self.manual_reexport \
-                and is_able_to_connect(self.TEST_URL)\
-                and self.has_unsent_data():
+               and is_able_to_connect(self.TEST_URL)\
+               and self.has_unsent_data():
                 logger.info("Attempt to send previously unsent data.")
                 return [result] + self.send_unsent_data()
         elif not result.successful and self._save_unsent_data:
