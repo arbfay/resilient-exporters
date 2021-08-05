@@ -14,11 +14,13 @@ __all__ = ["ResilientExporterException", "MissingModuleError", \
 class ResilientExporterException(Exception):
     """Something wrong occured when using exporters."""
 
-    def __init__(self, exporter=None, *args, **kwargs):
+    def __init__(self, exporter=None, message=None, *args, **kwargs):
         if exporter:
             self.type = type(exporter).__name__
             self.name = exporter.name
             self.content = f"Exception raised in {self.name} of type {self.type}"
+            if message:
+                self.content = f"{self.content} \n {message}"
             super(ResilientExporterException, self).__init__(self.content)
         else:
             super(ResilientExporterException, self).__init__(*args, **kwargs)
