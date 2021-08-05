@@ -41,6 +41,7 @@ sql_datatypes_map = {
                         "macaddr": str,
                         "macaddr8": str,
                         "USER-DEFINED": str,
+                        "ARRAY": list
                     }
     }
 
@@ -135,15 +136,15 @@ def _validate_data_for_sql_table(data: dict, table: dict):
     for key, val in data.items():
         if val is None:
             if not table[key].is_nullable:
-                raise DataTypeError(self, f"Column '{key}' is not nullable, but \
-                                            value provided is None.")
+                raise DataTypeError(message=f"Column '{key}' is not nullable, but \
+                                              value provided is None.")
         elif not isinstance(val, table[key].data_type):
-            raise DataTypeError(self, f"Invalid data type for '{key}'.")
+            raise DataTypeError(message=f"Invalid data type for '{key}'.")
         elif isinstance(val, str):
             if isinstance(table[key].precision, int):
                 if len(val) > table[key].precision:
-                    raise DataTypeError(self, f"String of chars too long for '{key}'. \
-                                                It must be {table[key][3]} chars maximum.")
+                    raise DataTypeError(message=f"String of chars too long for '{key}'. \
+                                                  It must be {table[key][3]} chars maximum.")
     return
 
 class _DataStore:
