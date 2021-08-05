@@ -26,9 +26,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest
+        pip install flake8 pytest poetry
         if [ -f dev_requirements.txt ]; then pip install -r dev_requirements.txt; fi
-        pip install -e .
+        poetry build && poetry install -E all
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
