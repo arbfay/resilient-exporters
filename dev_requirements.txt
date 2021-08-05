@@ -7,4 +7,5 @@ flake8
 requests
 pymongo
 elasticsearch
+psycopg2-binary
 poetry
