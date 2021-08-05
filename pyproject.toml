@@ -4,7 +4,7 @@ build-backend           = "poetry.core.masonry.api"
 
 [tool.poetry]
 name                    = "resilient-exporters"
-version                 = "0.1.3"
+version                 = "0.1.4"
 license                 = "MIT"
 description             = "A package to export data to databases resiliently."
 authors                 = ["Fayçal Arbai <arbai.faycal@gmail.com>"]
