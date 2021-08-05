@@ -4,6 +4,7 @@ twine
 sphinx
 sphinxbootstrap4theme
 flake8
+pytest
 requests
 pymongo
 elasticsearch

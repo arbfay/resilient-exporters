@@ -1,6 +1,7 @@
 import os
-import json
+import orjson as json
 import pytest
+
 
 def test_exppool_base():
     import resilient_exporters as re
@@ -16,19 +17,20 @@ def test_exppool_base():
     pool = re.exporters.ExporterPool([exp])
 
     mydata = {"field1": "value1",
-               "field2": "value2"}
+              "field2": "value2"}
     pool.send(mydata)
-    lines.append(json.dumps(mydata))
+    lines.append(json.dumps(mydata).decode("utf-8"))
 
     mydata = {"field1": "value1",
-               "field2": "value2",
-               "field3": "value3444"}
+              "field2": "value2",
+              "field3": "value3444"}
     pool.send(mydata)
     exp.stop()
-    lines.append(json.dumps(mydata))
+    lines.append(json.dumps(mydata).decode("utf-8"))
 
     with open("test_fileexporter.txt", "r") as file:
         assert lines == file.read().splitlines()
+
 
 @pytest.mark.skipif(os.getenv('MONGO_IP', None) is None,
                     reason="No configured MongoDB URI.")

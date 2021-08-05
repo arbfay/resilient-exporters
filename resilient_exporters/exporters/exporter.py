@@ -2,13 +2,15 @@ import abc
 import pathlib
 import logging
 import time
+from collections import namedtuple
 from collections.abc import MutableSequence, Set
 from functools import wraps
 from typing import Callable, Union, Optional, List, Text, Any
-from resilient_exporters.utils import is_able_to_connect, _DataStore
-from resilient_exporters.exporters import ExportResult
+from ..utils import is_able_to_connect, _DataStore
 
 logger = logging.getLogger(__name__)
+
+ExportResult = namedtuple("ExportResult", ["returned", "successful"])
 
 
 class Exporter(metaclass=abc.ABCMeta):

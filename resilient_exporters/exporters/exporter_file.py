@@ -85,7 +85,7 @@ class FileExporter(Exporter):
                 if not isinstance(piece, dict):
                     line = piece
                 else:
-                    line = json.dumps(piece)
+                    line = json.dumps(piece).decode("utf-8")
                 print(line, file=self.target_file)
                 self.__remaining_lines -= 1
             else:

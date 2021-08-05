@@ -1,11 +1,11 @@
 import os
-import json
+import orjson as json
 import pytest
+import resilient_exporters as re
+
 
 class TestFileExporter:
     def test_fileexp_dictdata(self):
-        import resilient_exporters as re
-
         try:
             os.remove("test_fileexporter.txt")
         except FileNotFoundError:
@@ -18,23 +18,21 @@ class TestFileExporter:
         )
 
         mydata = {"field1": "value1",
-                   "field2": "value2"}
+                  "field2": "value2"}
         exp.send(mydata)
-        lines.append(json.dumps(mydata))
+        lines.append(json.dumps(mydata).decode("utf-8"))
 
         mydata = {"field1": "value1",
-                   "field2": "value2",
-                   "field3": "value3444"}
+                  "field2": "value2",
+                  "field3": "value3444"}
         exp.send(mydata)
-        lines.append(json.dumps(mydata))
+        lines.append(json.dumps(mydata).decode("utf-8"))
 
         exp.stop()
         with open("test_fileexporter.txt", "r") as file:
             assert lines == file.read().splitlines()
 
     def test_fileexp_stringdata(self):
-        import resilient_exporters as re
-
         try:
             os.remove("test_fileexporter.txt")
         except FileNotFoundError:
@@ -58,8 +56,6 @@ class TestFileExporter:
             assert lines == file.read().splitlines()
 
     def test_fileexp_maxlines(self):
-        import resilient_exporters as re
-
         try:
             os.remove("test_fileexporter.txt")
         except FileNotFoundError:
@@ -81,6 +77,7 @@ class TestFileExporter:
         with open("test_fileexporter.txt", "r") as file:
             assert lines == file.read().splitlines()
 
+
 @pytest.mark.skipif(os.getenv('MONGO_IP', None) is None,
                     reason="No configured MongoDB URI.")
 def test_mongoexp_dictdata():
@@ -92,8 +89,11 @@ def test_mongoexp_dictdata():
                                        password=os.environ['MONGO_PWD'])
 
     mydata = {"field1": "value11",
-               "field2": "value22"}
-    assert True == exp.send(mydata, db="test-transmitter", collection="dataset").successful
+              "field2": "value22"}
+    assert exp.send(mydata,
+                    db="test-transmitter",
+                    collection="dataset").successful
+
 
 @pytest.mark.skipif(os.getenv('SQL_SERVER_ADD', None) is None,
                     reason="No configured SQL Server address.")
@@ -110,4 +110,4 @@ def test_sqlserverexp_dictdata():
     mydata = {"field1": "value11",
               "field2": 0.1}
 
-    assert True == exp.send(mydata, table="test").successful
+    assert exp.send(mydata, table="test").successful
