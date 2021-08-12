@@ -99,7 +99,8 @@ class PostgreSQLExporter(Exporter):
 
     def send(self,
              data: Union[dict, tuple],
-             table: Text = None) -> ExportResult:
+             table: Text = None,
+             update_on: Union[Text, tuple, list] = None) -> ExportResult:
         """Inserts data into a table. Reuses default database and
         tables names, if provided at initialisation.
 
@@ -110,7 +111,8 @@ class PostgreSQLExporter(Exporter):
                 as many elements as there are columns in the table.
             table (str): name of the target table. If `None`, will use
                 the default value set at initialisation. Default is `None`.
-
+            update_on (Union[Text, tuple, list]): upsert on given columns.
+                If `None`, it will not do an upsert. Default is `None`.
         Returns:
             ExportResult: the result in the form (Object, True) if successful,
                 (None, False) otherwise.
@@ -131,12 +133,31 @@ class PostgreSQLExporter(Exporter):
             columns, values = _transform_data_for_sql_query(data)
 
             if isinstance(data, dict):
-                print(f"INSERT INTO {table}({columns}) VALUES({values});")
-                self.__cur.execute(f"INSERT INTO {table}({columns}) \
-                                    VALUES({values});", table)
+                query = f"INSERT INTO {table}({columns}) VALUES({values})"
             else:
-                self.__cur.execute(f"INSERT INTO {table} \
-                                    VALUES({values});", table)
+                query = f"INSERT INTO {table} VALUES({values})"
+            if update_on:
+                if isinstance(update_on, str):
+                    update_on = [update_on]
+                if isinstance(update_on, list) \
+                  or isinstance(update_on, tuple):
+                    tmp = ""
+                    for item in update_on:
+                        assert item in columns, \
+                            f"{item} is not a column of the table {table}"
+                        tmp += item + ","
+                    update_on = tmp[:-1]
+                else:
+                    raise Exception("update_on type not supported")
+                query += f" ON CONFLICT ({update_on}) DO UPDATE SET"
+                for colname in columns.split(","):
+                    if colname == update_on:
+                        continue
+                    query += f" {colname} = EXCLUDED.{colname},"
+                query = query[:-1]  # removes last ',' character
+            query += ";"
+            logger.debug(f"Final query: {query}")
+            self.__cur.execute(query, table)
             success = bool(self.__cur.rowcount)
             self.__conn.commit()
             return ExportResult(None, success)
