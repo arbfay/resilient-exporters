@@ -165,7 +165,7 @@ class _DataStore:
     def __new__(cls, *args, **kwargs):
         if "shelf_filename" in kwargs.keys():
             if kwargs["shelf_filename"] in cls.__used_filenames:
-                raise ValueError(f"File {kwargs['db_filename']} is already \
+                raise ValueError(f"File {kwargs['shelf_filename']} is already \
                                  being used.")
         return super(_DataStore, cls).__new__(cls)
 

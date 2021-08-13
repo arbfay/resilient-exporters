@@ -100,7 +100,7 @@ class PostgreSQLExporter(Exporter):
     def send(self,
              data: Union[dict, tuple],
              table: Text = None,
-             update_on: Union[Text, tuple, list] = None) -> ExportResult:
+             upsert_on: Union[Text, tuple, list] = None) -> ExportResult:
         """Inserts data into a table. Reuses default database and
         tables names, if provided at initialisation.
 
@@ -111,7 +111,7 @@ class PostgreSQLExporter(Exporter):
                 as many elements as there are columns in the table.
             table (str): name of the target table. If `None`, will use
                 the default value set at initialisation. Default is `None`.
-            update_on (Union[Text, tuple, list]): upsert on given columns.
+            upsert_on (Union[Text, tuple, list]): upsert on given columns.
                 If `None`, it will not do an upsert. Default is `None`.
         Returns:
             ExportResult: the result in the form (Object, True) if successful,
@@ -136,31 +136,35 @@ class PostgreSQLExporter(Exporter):
                 query = f"INSERT INTO {table}({columns}) VALUES({values})"
             else:
                 query = f"INSERT INTO {table} VALUES({values})"
-            if update_on:
-                if isinstance(update_on, str):
-                    update_on = [update_on]
-                if isinstance(update_on, list) \
-                  or isinstance(update_on, tuple):
+            if upsert_on:
+                if isinstance(upsert_on, str):
+                    upsert_on = [upsert_on]
+                if isinstance(upsert_on, list) \
+                  or isinstance(upsert_on, tuple):
                     tmp = ""
-                    for item in update_on:
+                    for item in upsert_on:
                         assert item in columns, \
                             f"{item} is not a column of the table {table}"
                         tmp += item + ","
-                    update_on = tmp[:-1]
+                    upsert_on = tmp[:-1]
                 else:
-                    raise Exception("update_on type not supported")
-                query += f" ON CONFLICT ({update_on}) DO UPDATE SET"
+                    raise InvalidConfigError("upsert_on type not supported")
+                query += f" ON CONFLICT ({upsert_on}) DO UPDATE SET"
                 for colname in columns.split(","):
-                    if colname == update_on:
+                    if colname == upsert_on:
                         continue
                     query += f" {colname} = EXCLUDED.{colname},"
                 query = query[:-1]  # removes last ',' character
             query += ";"
             logger.debug(f"Final query: {query}")
-            self.__cur.execute(query, table)
-            success = bool(self.__cur.rowcount)
-            self.__conn.commit()
-            return ExportResult(None, success)
+            try:
+                self.__cur.execute(query, table)
+                success = bool(self.__cur.rowcount)
+                self.__conn.commit()
+                return ExportResult(None, success)
+            except psycopg2.Error as e:
+                logging.error(e)
+                return ExportResult(None, False)
         else:
             raise InvalidConfigError(self, f"Table {table} does not exist in \
                                             database. Provide the name of \

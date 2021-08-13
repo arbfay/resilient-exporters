@@ -47,7 +47,7 @@ class Exporter(metaclass=abc.ABCMeta):
         self.manual_reexport = manual_reexport
         self.TEST_URL = test_url
 
-        self.tmp_filename = tmp_file if tmp_file is None else tmp_file
+        self.tmp_filename = tmp_file
         self.name = f"exporter_{Exporter.__instantiated}"
         self._run_transform = transform is not None
         self._save_unsent_data = save_unsent_data
